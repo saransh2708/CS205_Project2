@@ -1,6 +1,7 @@
 #include <bits/stdc++.h>
 using namespace std;
 
+// This is a helper function to get word tokens from the sentences
 vector<double> getTokens(string s)
 {
     string res = "";
@@ -22,14 +23,16 @@ vector<double> getTokens(string s)
     return tokens;
 }
 
+// This is the function used to do Z normalization.
 void normalizeFeatures(vector<vector<double>> &features)
 {
     int rows = features.size();
     int cols = features[0].size();
 
-    vector<double> mean(cols, 0.0);
-    vector<double> std(cols, 0.0);
+    vector<double> mean(cols, 0.0); // This stores mean of the columns.
+    vector<double> std(cols, 0.0); // This stores standard deviation of the columns.
 
+    // Getting column wise mean and standard devation.
     for (int col = 0; col < cols; col++)
     {
         // Getting mean
@@ -38,6 +41,7 @@ void normalizeFeatures(vector<vector<double>> &features)
             mean[col] += features[row][col];
         }
         mean[col] /= rows;
+
         // Getting standard deviation
         for (int row = 0; row < rows; row++)
         {
@@ -46,6 +50,7 @@ void normalizeFeatures(vector<vector<double>> &features)
         std[col] = sqrt(std[col] / rows);
     }
 
+    // Normalizing every feature
     for (int row = 0; row < rows; row++)
     {
         for (int col = 0; col < cols; col++)
@@ -62,6 +67,7 @@ void normalizeFeatures(vector<vector<double>> &features)
     }
 }
 
+// This is the Dataset class which helps in standarizing a lot of common operations. 
 class Dataset
 {
 public:
@@ -83,12 +89,18 @@ public:
         else
         {
             string s;
+
+            // Iterating line by line of the file.
             while (getline(f, s))
             {
                 vector<double> tokens = getTokens(s);
 
                 vector<double> feat;
+                
+                // Considering labels to be the first column of the file.
                 labels.push_back(tokens[0]);
+
+                // Pushing everything in feature vectors.
                 for (int i = 1; i < tokens.size(); i++)
                 {
                     feat.push_back(tokens[i]);
@@ -96,7 +108,10 @@ public:
                 features.push_back(feat);
             }
             f.close();
+            
+            // Normalizing features
             normalizeFeatures(features);
+            
             instances = labels.size();
         }
     }
