@@ -85,7 +85,6 @@ public:
             string s;
             while (getline(f, s))
             {
-                // cout << s << endl;
                 vector<double> tokens = getTokens(s);
 
                 vector<double> feat;

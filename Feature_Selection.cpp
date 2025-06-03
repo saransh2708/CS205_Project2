@@ -1,8 +1,8 @@
 #include <bits/stdc++.h>
-#include "Feture_Selection.h"
+#include "Dataset.h"
 using namespace std;
 
-double get_cross_validation_accuracy(Dataset ds, vector<int> current_features)
+double get_leaving_one_out_accuracy(Dataset ds, vector<int> current_features)
 {
     int rows = ds.instances;
     int correctly_labelled = 0;
@@ -31,7 +31,7 @@ double get_cross_validation_accuracy(Dataset ds, vector<int> current_features)
     return (double)correctly_labelled / rows;
 }
 
-void convert_map_features_to_vector(unordered_map<int, int> done_features, vector<int> &current_features)
+void convert_feature_map_to_feature_vector(unordered_map<int, int> done_features, vector<int> &current_features)
 {
     current_features.clear();
     for (auto x : done_features)
@@ -41,25 +41,29 @@ void convert_map_features_to_vector(unordered_map<int, int> done_features, vecto
     }
 }
 
-void backward_pass(Dataset ds)
+void backward_elimination(Dataset ds)
 {
     int total_features = ds.features[0].size();
     vector<int> current_features;
+    vector<int> best_features;
+    double best_overall_accuracy = 0.0;
     unordered_map<int, int> done_features;
     for (int feat_idx = 0; feat_idx < total_features; feat_idx++)
     {
         done_features[feat_idx] = 1;
     }
-    double accuracy = get_cross_validation_accuracy(ds, current_features);
-    convert_map_features_to_vector(done_features, current_features);
-    cout << "Using feature(s) {" << current_features[0] + 1;
+    convert_feature_map_to_feature_vector(done_features, current_features);
+    best_features = current_features;
+    double accuracy = get_leaving_one_out_accuracy(ds, current_features);
+    best_overall_accuracy = accuracy; 
+    cout << "Running nearest neighbor with all the features {" << current_features[0] + 1;
     for (int feat_idx = 1; feat_idx < current_features.size(); feat_idx++)
     {
         cout << ", " << current_features[feat_idx] + 1;
     }
-    cout << "} accuracy is " << accuracy * 100 << "%\n";
+    cout << "} has accuracy " << accuracy * 100 << "%\n\n";
 
-    for (int number_of_features = total_features; number_of_features >= 1; number_of_features--)
+    for (int number_of_features = total_features; number_of_features >= 2; number_of_features--)
     {
         int worst_feat = -1;
         double best_accuracy = 0;
@@ -69,9 +73,9 @@ void backward_pass(Dataset ds)
             if (!done_features[feat_idx])
                 continue;
             done_features[feat_idx] = 0;
-            convert_map_features_to_vector(done_features, current_features);
-            accuracy = get_cross_validation_accuracy(ds, current_features);
-            cout << "Using feature(s) {" << current_features[0] + 1;
+            convert_feature_map_to_feature_vector(done_features, current_features);
+            accuracy = get_leaving_one_out_accuracy(ds, current_features);
+            cout << "       Using feature(s) {" << current_features[0] + 1;
             for (int feat_idx = 1; feat_idx < current_features.size(); feat_idx++)
             {
                 cout << ", " << current_features[feat_idx] + 1;
@@ -84,19 +88,35 @@ void backward_pass(Dataset ds)
             }
             done_features[feat_idx] = 1;
         }
-        if (worst_feat == -1)
-        {
-            cerr << "No further improvements\n";
-        }
         done_features[worst_feat] = 0;
-        convert_map_features_to_vector(done_features, current_features);
+
+        convert_feature_map_to_feature_vector(done_features, current_features);
+        cout << "\nFeature set {" << current_features[0] + 1;
+        for (int feat_idx = 1; feat_idx < current_features.size(); feat_idx++)
+        {
+            cout << ", " << current_features[feat_idx] + 1;
+        }
+        cout << "} was best with " << best_accuracy * 100 << " accuracy.\n\n";
+        if (best_accuracy > best_overall_accuracy)
+        {
+            best_features = current_features;
+            best_overall_accuracy = best_accuracy;
+        }
     }
+    cout << "Finisheshed Search! Best feature subset came out to be {" << best_features[0] + 1;
+    for (int feat_idx = 1; feat_idx < (int)best_features.size(); feat_idx++)
+    {
+        cout << ", " << best_features[feat_idx] + 1;
+    }
+    cout << "} with accuracy " << best_overall_accuracy * 100 << "\n";
 }
 
-void forward_pass(Dataset ds)
+void forward_selection(Dataset ds)
 {
     vector<int> current_features;
     unordered_map<int, int> done_features;
+    vector<int> best_features;
+    double best_overall_accuracy = 0;
     int total_features = ds.features[0].size();
     for (int number_of_features = 1; number_of_features <= total_features; number_of_features++)
     {
@@ -107,9 +127,9 @@ void forward_pass(Dataset ds)
             if (done_features[feat_idx])
                 continue;
             current_features.push_back(feat_idx);
-            double accuracy = get_cross_validation_accuracy(ds, current_features);
+            double accuracy = get_leaving_one_out_accuracy(ds, current_features);
 
-            cout << "Using feature(s) {" << current_features[0] + 1;
+            cout << "       Using feature(s) {" << current_features[0] + 1;
             for (int feat_idx = 1; feat_idx < current_features.size(); feat_idx++)
             {
                 cout << ", " << current_features[feat_idx] + 1;
@@ -124,19 +144,53 @@ void forward_pass(Dataset ds)
 
             current_features.pop_back();
         }
-        if (best_feat == -1)
-        {
-            cerr << "No further improvements\n";
-        }
         current_features.push_back(best_feat);
         done_features[best_feat] = 1;
-        // cout<<"Feature set {}"
+        cout << "\nFeature set {" << current_features[0] + 1;
+        for (int feat_idx = 1; feat_idx < current_features.size(); feat_idx++)
+        {
+            cout << ", " << current_features[feat_idx] + 1;
+        }
+        cout << "} was best with " << best_accuracy * 100 << " accuracy.\n\n";
+        if (best_accuracy > best_overall_accuracy)
+        {
+            best_features = current_features;
+            best_overall_accuracy = best_accuracy;
+        }
     }
+    cout << "Finisheshed Search! Best feature subset came out to be {" << best_features[0] + 1;
+    for (int feat_idx = 1; feat_idx < best_features.size(); feat_idx++)
+    {
+        cout << ", " << best_features[feat_idx] + 1;
+    }
+    cout << "} with accuracy " << best_overall_accuracy * 100 << "\n\n";
 }
 
 int main()
 {
     system("pwd");
-    Dataset m("CS205_small_Data__49.txt");
-    forward_pass(m);
+    cout << "Hello World! Welcome to my Feature Selection algorithm:\n";
+    cout << "Please select a dataset according to its number: \n1) CS205_small_Data__49.txt\n2) CS205_large_Data__38.txt\n3) Gender Classification (Part 2)\n";
+    int file;
+    cin >> file;
+    Dataset *ds;
+    if (file == 1)
+        ds = new Dataset("CS205_small_Data__49.txt");
+    else if (file == 2)
+        ds = new Dataset("CS205_large_Data__38.txt");
+    else if (file == 3)
+        ds = new Dataset("gender_transformed.txt");
+    else
+        cerr << "Wrong Selection of the Dataset!\n";
+    int algorithm;
+    cout << "Please select an algorithm type according to its number: \n1) Forward Selection.\n2) Backward Elimination.\n";
+    cin >> algorithm;
+    cout << "This dataset has " << ds->features[0].size() << " features (excluding the class attribute) and have " << ds->instances << " instances.\n\n";
+    cout << "Beginning Search.\n\n";
+    if (algorithm == 1)
+        forward_selection(*ds);
+    else if (algorithm == 2)
+        backward_elimination(*ds);
+    else
+        cerr << "Wrong Selection of the Algorithm!\n";
 }
