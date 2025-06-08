@@ -6,7 +6,7 @@ using namespace std::chrono;
 // Function to get leaving one out accuracy with the features in current_features
 double get_leaving_one_out_accuracy(Dataset ds, vector<int> current_features)
 {
-    int rows = ds.instances;
+    double rows = ds.instances;
     int correctly_labelled = 0;
 
     // Iterating over every row and finding other row which is closest to this row when compared to features in current_features.
@@ -102,7 +102,7 @@ void backward_elimination(Dataset ds)
     for (int number_of_features = total_features; number_of_features >= 2; number_of_features--)
     {
         int worst_feat = -1;
-        double best_accuracy = 0;
+        double best_accuracy = 0.0;
 
         for (int feat_idx = 0; feat_idx < total_features; feat_idx++)
         {
@@ -144,7 +144,7 @@ void backward_elimination(Dataset ds)
         {
             cout << ", " << current_features[feat_idx] + 1;
         }
-        cout << "} was best with " << best_accuracy * 100 << " accuracy.\n\n";
+        cout << "} was best with " << best_accuracy * 100 << "% accuracy.\n\n";
 
         // Storing the best overall accuracy and features that resulted it.
         if (best_accuracy > best_overall_accuracy)
@@ -170,13 +170,13 @@ void forward_selection(Dataset ds)
     vector<int> current_features;
     unordered_map<int, int> done_features;
     vector<int> best_features;
-    double best_overall_accuracy = 0;
+    double best_overall_accuracy = 0.0;
     
     // Main loop which adds a feature in every iteration.
     for (int number_of_features = 1; number_of_features <= total_features; number_of_features++)
     {
         int best_feat = -1;
-        double best_accuracy = 0;
+        double best_accuracy = 0.0;
 
         // Iterating over every feature to see their contribution to the accuracy.
         for (int feat_idx = 0; feat_idx < total_features; feat_idx++)
@@ -217,7 +217,7 @@ void forward_selection(Dataset ds)
         {
             cout << ", " << current_features[feat_idx] + 1;
         }
-        cout << "} was best with " << best_accuracy * 100 << " accuracy.\n\n";
+        cout << "} was best with " << best_accuracy * 100 << "% accuracy.\n\n";
 
          // Storing the best overall accuracy and features that resulted it.
         if (best_accuracy > best_overall_accuracy)
