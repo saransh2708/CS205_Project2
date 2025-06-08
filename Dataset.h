@@ -30,7 +30,7 @@ void normalizeFeatures(vector<vector<double>> &features)
     int cols = features[0].size();
 
     vector<double> mean(cols, 0.0); // This stores mean of the columns.
-    vector<double> std(cols, 0.0); // This stores standard deviation of the columns.
+    vector<double> std(cols, 0.0);  // This stores standard deviation of the columns.
 
     // Getting column wise mean and standard devation.
     for (int col = 0; col < cols; col++)
@@ -67,11 +67,31 @@ void normalizeFeatures(vector<vector<double>> &features)
     }
 }
 
-// This is the Dataset class which helps in standarizing a lot of common operations. 
+// This is to get the default rate
+double get_default_rate(vector<double> labels)
+{
+    int total = labels.size();
+
+    int count_default = 0;
+    for (double label : labels)
+    {
+        if (label == 1.0)
+        {
+            count_default++;
+        }
+    }
+    // Get the most probable class
+    count_default = max(count_default, total-count_default);
+
+    return (double)count_default / total;
+}
+
+// This is the Dataset class which helps in standarizing a lot of common operations.
 class Dataset
 {
 public:
     int instances;
+    double default_rate;
     vector<vector<double>> features;
     vector<double> labels;
 
@@ -96,7 +116,7 @@ public:
                 vector<double> tokens = getTokens(s);
 
                 vector<double> feat;
-                
+
                 // Considering labels to be the first column of the file.
                 labels.push_back(tokens[0]);
 
@@ -108,10 +128,11 @@ public:
                 features.push_back(feat);
             }
             f.close();
-            
+
             // Normalizing features
             normalizeFeatures(features);
-            
+
+            default_rate = get_default_rate(labels);
             instances = labels.size();
         }
     }

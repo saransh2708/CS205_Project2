@@ -260,7 +260,8 @@ int main()
     cout << "Please select an algorithm type according to its number: \n1) Forward Selection.\n2) Backward Elimination.\n";
     cin >> algorithm;
     cout << "This dataset has " << ds->features[0].size() << " features (excluding the class attribute) and have " << ds->instances << " instances.\n\n";
-    
+    cout<<"The deault rate of this dataset is : "<<ds->default_rate*100<<"% \n\n";
+
     get_all_features_accuracy(*ds);
     
     cout << "Beginning Search.\n\n";
